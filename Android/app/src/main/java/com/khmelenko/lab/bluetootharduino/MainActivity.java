@@ -6,29 +6,34 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.UUID;
 
+import butterknife.Bind;
+import butterknife.OnClick;
 
+/**
+ * Main application activity
+ *
+ * @author Dmytro Khmelenko
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "bluetooth2";
+    public static final String TAG = "Arduino_BT";
 
+    @Bind(R.id.btnOn)
     private Button mBtnOn;
+    @Bind(R.id.btnOff)
     private Button mBtnOff;
+
     private TextView mStatusView;
 
-    private Handler h;
+    private Handler mUiHandler;
 
     private static final int REQUEST_ENABLE_BT = 1;
     final int RECIEVE_MESSAGE = 1;
@@ -37,26 +42,22 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothSocket mBtSocket;
     private StringBuilder sb = new StringBuilder();
 
-    private ConnectedThread mConnectedThread;
+    private CommunicationThread mConnectedThread;
 
-    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private static final UUID CLIENT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    private static String sMacAddress = "00:0E:EA:CF:1A:83";
+    private static final String MAC_ADDRESS = "00:0E:EA:CF:1A:83";
 
-    /**
-     * Called when the activity is first created.
-     */
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
 
-        mBtnOn = (Button) findViewById(R.id.btnOn);
-        mBtnOff = (Button) findViewById(R.id.btnOff);
         mStatusView = (TextView) findViewById(R.id.txtArduino);
 
-        h = new Handler() {
+        mUiHandler = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 switch (msg.what) {
                     case RECIEVE_MESSAGE:
@@ -85,59 +86,33 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-        checkBTState();
-
-        mBtnOn.setOnClickListener(new View.OnClickListener() {        // ���������� ���������� ��� ������� �� ������
-            public void onClick(View v) {
-                mConnectedThread.write("1");
-            }
-        });
-
-        mBtnOff.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mConnectedThread.write("0");
-            }
-        });
+        checkBluetoothState();
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        // Set up a pointer to the remote node using it's sMacAddress.
-        BluetoothDevice device = mBtAdapter.getRemoteDevice(sMacAddress);
-
-        // Two things are needed to make a connection:
-        //   A MAC sMacAddress, which we got above.
-        //   A Service ID or UUID.  In this case we are using the
-        //     UUID for SPP.
+        BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
         try {
-            mBtSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+            mBtSocket = device.createRfcommSocketToServiceRecord(CLIENT_UUID);
         } catch (IOException e) {
-            errorExit("Fatal Error", "In onResume() and socket create failed: " + e.getMessage() + ".");
+            Log.d(TAG, "Socket create failed\n" + e.getMessage());
         }
 
-        // Discovery is resource intensive.  Make sure it isn't going on
-        // when you attempt to connect and pass your message.
         mBtAdapter.cancelDiscovery();
 
         // Establish the connection.  This will block until it connects.
-        Log.d(TAG, "Establish");
+        Log.d(TAG, "Connecting...");
         try {
             mBtSocket.connect();
-            Log.d(TAG, "Connecting");
+            Log.d(TAG, "Connected");
         } catch (IOException e) {
-            try {
-                mBtSocket.close();
-            } catch (IOException e2) {
-                errorExit("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
-            }
+            closeConnection();
         }
 
-        // Create a data stream so we can talk to server.
-        Log.d(TAG, "Socket");
-
-        mConnectedThread = new ConnectedThread(mBtSocket);
+        // start communication thread
+        mConnectedThread = new CommunicationThread(mBtSocket, mUiHandler);
         mConnectedThread.start();
     }
 
@@ -145,24 +120,38 @@ public class MainActivity extends AppCompatActivity {
     public void onPause() {
         super.onPause();
 
-        Log.d(TAG, "...In onPause()...");
+        closeConnection();
+    }
 
+    @OnClick(R.id.btnOn)
+    public void handleOnBtn() {
+        // TODO Use another commands
+        mConnectedThread.send("1");
+    }
+
+    @OnClick(R.id.btnOff)
+    public void handleOffBtn() {
+        // TODO Use another commands
+        mConnectedThread.send("0");
+    }
+
+    /**
+     * Closes socket connection
+     */
+    private void closeConnection() {
         try {
             mBtSocket.close();
-        } catch (IOException e2) {
-            errorExit("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
+        } catch (IOException e) {
+            Log.d(TAG, "Failed to close connection\n" + e.getMessage());
         }
     }
 
-    private void checkBTState() {
-        // Check for Bluetooth support and then check to make sure it is turned on
-        // Emulator doesn't support Bluetooth and will return null
-        if (mBtAdapter == null) {
-            errorExit("Fatal Error", "Bluetooth null");
-        } else {
-            if (mBtAdapter.isEnabled()) {
-                Log.d(TAG, "BT enabled");
-            } else {
+    /**
+     * Checks Bluetooth state
+     */
+    private void checkBluetoothState() {
+        if (mBtAdapter != null) {
+            if (!mBtAdapter.isEnabled()) {
                 //Prompt user to turn on Bluetooth
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -170,65 +159,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void errorExit(String title, String message) {
-        Toast.makeText(getBaseContext(), title + " - " + message, Toast.LENGTH_LONG).show();
-        finish();
-    }
-
-    private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            // Get the input and output streams, using temp objects because
-            // member streams are final
-            try {
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            byte[] buffer = new byte[256];
-            int bytes;
-
-            // Keep listening to the InputStream until an exception occurs
-            while (true) {
-                try {
-                    // Read from the InputStream
-                    bytes = mmInStream.read(buffer);
-                    h.obtainMessage(RECIEVE_MESSAGE, bytes, -1, buffer).sendToTarget();
-                } catch (IOException e) {
-                    break;
-                }
-            }
-        }
-
-        public void write(String message) {
-            Log.d(TAG, "Writing message: " + message + "...");
-            byte[] msgBuffer = message.getBytes();
-            try {
-                mmOutStream.write(msgBuffer);
-            } catch (IOException e) {
-                Log.d(TAG, "Exception while writing: " + e.getMessage() + "...");
-            }
-        }
-
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }
