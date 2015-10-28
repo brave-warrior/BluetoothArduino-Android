@@ -6,12 +6,15 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.util.UUID;
 
 import butterknife.Bind;
@@ -26,64 +29,31 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "Arduino_BT";
 
+    private static final int REQUEST_ENABLE_BT = 0;
+
     @Bind(R.id.btnOn)
     private Button mBtnOn;
     @Bind(R.id.btnOff)
     private Button mBtnOff;
-
+    @Bind(R.id.txtArduino)
     private TextView mStatusView;
-
-    private Handler mUiHandler;
-
-    private static final int REQUEST_ENABLE_BT = 1;
-    final int RECIEVE_MESSAGE = 1;
 
     private BluetoothAdapter mBtAdapter;
     private BluetoothSocket mBtSocket;
-    private StringBuilder sb = new StringBuilder();
-
     private CommunicationThread mConnectedThread;
 
-    private static final UUID CLIENT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private Handler mUiHandler;
 
+    private static final UUID CLIENT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String MAC_ADDRESS = "00:0E:EA:CF:1A:83";
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
-        mStatusView = (TextView) findViewById(R.id.txtArduino);
-
-        mUiHandler = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                switch (msg.what) {
-                    case RECIEVE_MESSAGE:
-                        byte[] readBuf = (byte[]) msg.obj;
-                        String strIncom = new String(readBuf, 0, msg.arg1);
-//                        try {
-//                            strIncom = new String(readBuf, "US-ASCII");
-//                        } catch (UnsupportedEncodingException e) {
-//                            e.printStackTrace();
-//                        }
-                        sb.append(strIncom);
-                        int endOfLineIndex = sb.indexOf("\r\n");
-//                        if (endOfLineIndex > 0) {
-//                            String sbprint = sb.substring(0, endOfLineIndex);
-//                            sb.delete(0, sb.length());
-//                            mStatusView.setText("Arduino: " + sbprint);
-//                            mBtnOff.setEnabled(true);
-//                            mBtnOn.setEnabled(true);
-//                        }
-                        mStatusView.setText("Arduino: " + sb);
-                        break;
-                }
-            }
-
-            ;
-        };
+        mUiHandler = new UiHandler(this);
 
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         checkBluetoothState();
@@ -155,6 +125,36 @@ public class MainActivity extends AppCompatActivity {
                 //Prompt user to turn on Bluetooth
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+        }
+    }
+
+    /**
+     * Handler for UI
+     */
+    private static class UiHandler extends Handler {
+
+        private final WeakReference<MainActivity> mActivity;
+
+        public UiHandler(MainActivity activity) {
+            mActivity = new WeakReference<MainActivity>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            MainActivity activity = mActivity.get();
+
+            switch (msg.what) {
+                case CommunicationThread.RECEIVE_MESSAGE:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    String readStr = new String(readBuf, 0, msg.arg1);
+                    try {
+                        readStr = new String(readBuf, "US-ASCII");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    activity.mStatusView.setText("Arduino: " + readStr);
+                    break;
             }
         }
     }

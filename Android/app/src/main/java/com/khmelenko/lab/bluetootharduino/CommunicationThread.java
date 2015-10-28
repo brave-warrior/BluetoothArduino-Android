@@ -21,7 +21,7 @@ public class CommunicationThread extends Thread {
     private final InputStream mInStream;
     private final OutputStream mOutStream;
 
-    final int RECIEVE_MESSAGE = 1;
+    public static final int RECEIVE_MESSAGE = 1;
 
     /**
      * Constructor
@@ -56,7 +56,7 @@ public class CommunicationThread extends Thread {
         while (true) {
             try {
                 bytes = mInStream.read(buffer);
-                mHandler.obtainMessage(RECIEVE_MESSAGE, bytes, -1, buffer).sendToTarget();
+                mHandler.obtainMessage(RECEIVE_MESSAGE, bytes, -1, buffer).sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();
                 break;
