@@ -132,9 +132,9 @@ void loop()
     if(i > 0)
     {
       recv_str[i] = '\0';
-      Serial.print(" Sent: ");
+      Serial.print(" Received: ");
       Serial.print((char *)recv_str);
-      blueToothSerial.print(recv_str);
+      blueToothSerial.print("H f A");
     }
  
 /** if( Serial.available() > 0 )
@@ -147,7 +147,7 @@ void loop()
  }
  */
  
-  if(recvMsg(1000) == 0)
+  /* if(recvMsg(1000) == 0)
     {
         Serial.print("recv (char*): ");
         Serial.print((char *)recv_str);
@@ -157,7 +157,7 @@ void loop()
         Serial.println("send: Ack");
         blueToothSerial.print("Ack");//return back message
     }
-    
+    */
     
 }
 
