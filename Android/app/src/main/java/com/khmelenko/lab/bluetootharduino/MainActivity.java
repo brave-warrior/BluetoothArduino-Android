@@ -32,11 +32,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 0;
 
     @Bind(R.id.btnOn)
-    private Button mBtnOn;
+    public Button mBtnOn;
     @Bind(R.id.btnOff)
-    private Button mBtnOff;
+    public Button mBtnOff;
     @Bind(R.id.txtArduino)
-    private TextView mStatusView;
+    public TextView mStatusView;
 
     private BluetoothAdapter mBtAdapter;
     private BluetoothSocket mBtSocket;
