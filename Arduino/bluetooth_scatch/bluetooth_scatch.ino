@@ -1,4 +1,4 @@
-#include <SoftwareSerial.h>   //Software Serial Port
+#include <SoftwareSerial.h> 
 #define RxD 2
 #define TxD 3
 
@@ -23,18 +23,11 @@ void setup()
 
 void loop() 
 {
-    int i = 0;
-    while(blueToothSerial.available())
-    {                                              
-        recv_str[i] = (char)blueToothSerial.read();
-        i++;
-        delay(20);
-    }
-    
-    if(i > 0)
+    int readBytes = recvMsg();
+    if(readBytes > 0)
     {
         //check if there's any data sent from the remote bluetooth shield
-        recv_str[i] = '\0';
+        //recv_str[readBytes] = '\0';
         Serial.print("From BT: ");
         Serial.println((char *)recv_str);
 
@@ -42,48 +35,25 @@ void loop()
         blueToothSerial.println((char *)recv_str);
     }
 
-   //  String bluetooth_rx_buffer = "";
-
- //   blueToothSerial.listen();
-
-/*
-    while (blueToothSerial.available()) 
-    {
-        char inByte = blueToothSerial.read();
-        
-      //  Serial.print("From BT: ");
-        Serial.print((char)inByte);
-
-delay(50);
-      //  blueToothSerial.print("Return: ");
-      //  blueToothSerial.print((char)inByte);
-    }
-
-*/
 }
 
-//used for compare two string, return 0 if one equals to each other
-int strcmp(char *a, char *b)
+// receives data from the bluetooth
+int recvMsg()
 {
-    unsigned int ptr = 0;
-    while(a[ptr] != '\0')
-    {
-        if(a[ptr] != b[ptr]) return -1;
-        ptr++;
+    int i = 0;
+    while(blueToothSerial.available())
+    {                                              
+        recv_str[i] = (char)blueToothSerial.read();
+        i++;
+        delay(20);
     }
-    return 0;
+
+    return i;
 }
 
 //configure the Bluetooth through AT commands
 int setupBlueToothConnection()
 {
-   /** #if MASTER
-    Serial.println("this is MASTER\r\n");
-    #else
-    Serial.println("this is SLAVE\r\n");
-    #endif
-    */
-
     Serial.print("Setting up Bluetooth link\r\n");
     delay(3500);//wait for module restart
 
@@ -97,12 +67,11 @@ int setupBlueToothConnection()
         if(sendBlueToothCommand("AT") == 0)
             break;
         delay(500);
-       /**  blueToothSerial.begin(115200);
+        blueToothSerial.begin(115200);
         delay(500);
         Serial.print("try 115200\r\n");
         if(sendBlueToothCommand("AT") == 0)
             break;
-            **/
     }
     
     //we have to set the baud rate to 9600, since the soft serial is not stable at 115200
@@ -133,18 +102,20 @@ int setupBlueToothConnection()
   //  #endif
 //     sendBlueToothCommand("AT+RESET");//restart module to take effect
 
-char flag = 1;
-do{
-    if(Serial.available())
+    char flag = 1;
+    do
     {
-      if( Serial.read() == 'S')
-      {
-        sendBlueToothCommand("AT+RESET\r\n");
-        Serial.print("resetting...\r\n");
-        flag = 0;
-      }
+        if(Serial.available())
+        {
+            if( Serial.read() == 'S')
+            {
+                sendBlueToothCommand("AT+RESET\r\n");
+                Serial.print("resetting...\r\n");
+                flag = 0;
+            }
+         }
     }
-  }while(flag);
+    while(flag);
   
     delay(3500);//wait for module restart
     // if(sendBlueToothCommand("AT") != 0) return -1;//detect if the module exists
@@ -165,19 +136,6 @@ int sendBlueToothCommand(char command[])
     if(recvMsg(200) != 0) return -1;
     Serial.print(recv_str);
 
-/** while(1)
-  {
-    if(blueToothSerial.available())
-    {
-    char a = blueToothSerial.read();
-    Serial.print("recv: ");
-    Serial.print(a);
-    break;
-   }
-  } */
-
-   // Serial.print("recv: ");
-   // Serial.print(recv_str);
     Serial.println("");
     return 0;
 }
