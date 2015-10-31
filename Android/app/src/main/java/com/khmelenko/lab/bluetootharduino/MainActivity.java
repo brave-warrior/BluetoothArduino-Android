@@ -7,18 +7,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
-import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,10 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_ENABLE_BT = 0;
 
-    @Bind(R.id.btnOn)
-    public Button mBtnOn;
-    @Bind(R.id.btnOff)
-    public Button mBtnOff;
+    @Bind(R.id.main_send_command_btn)
+    public Button mSendCommandBtn;
+    @Bind(R.id.main_search_btn)
+    public Button mSearchBtn;
     @Bind(R.id.txtArduino)
     public TextView mStatusView;
 
@@ -104,17 +101,14 @@ public class MainActivity extends AppCompatActivity {
         closeConnection();
     }
 
-    @OnClick(R.id.btnOn)
+    @OnClick(R.id.main_send_command_btn)
     public void handleOnBtn() {
         // TODO Use another commands
         mConnectedThread.send("1");
     }
 
-    @OnClick(R.id.btnOff)
-    public void handleOffBtn() {
-        // TODO Use another commands
-        mConnectedThread.send("0");
-
+    @OnClick(R.id.main_search_btn)
+    public void handleSearch() {
         Intent intent = new Intent(this, SearchDevicesActivity.class);
         startActivity(intent);
     }
