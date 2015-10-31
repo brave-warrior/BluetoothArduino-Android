@@ -50,25 +50,16 @@ public class CommunicationThread extends Thread {
     @Override
     public void run() {
 
-        //byte[] buffer = new byte[256];
+        byte[] data = new byte[256];
         int bytes = 0;
 
         // reading data in infinite loop
         while (true) {
             try {
-                int nRead;
-                byte[] data = new byte[16384];
-
-
                 ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                while ((nRead = mInStream.read(data)) != -1) {
-                    buffer.write(data, 0, nRead);
-                    nRead = mInStream.available();
-                    if(nRead <= 0) {
-                        break;
-                    }
-                }
-                // buffer.flush();
+                bytes = mInStream.read(data);
+                buffer.write(data, 0, bytes);
+
                 mHandler.obtainMessage(RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();

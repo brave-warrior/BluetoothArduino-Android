@@ -162,8 +162,11 @@ public class MainActivity extends AppCompatActivity {
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
-                    activity.mStatusView.setText("Arduino: " + readStr);
                     Log.d(TAG, "Received message: " + readStr);
+
+                    String responseData = activity.mStatusView.getText().toString();
+                    responseData += readStr;
+                    activity.mStatusView.setText(responseData);
                     break;
             }
         }
