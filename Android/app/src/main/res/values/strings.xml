@@ -6,4 +6,5 @@
     <string name="title_activity_search_devices">Search Devices</string>
     <string name="main_send_command_btn">Send command</string>
     <string name="main_search_btn">Discover devices</string>
+    <string name="error_device_not_paired">Device is not paired. For connection pair to it first</string>
 </resources>

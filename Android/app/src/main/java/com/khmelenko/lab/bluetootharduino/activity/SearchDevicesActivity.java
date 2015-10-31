@@ -14,11 +14,13 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
+import com.khmelenko.lab.bluetootharduino.model.Device;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +65,8 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
         mDevicesRecyclerView.setAdapter(mDevicesListAdapter);
 
         registerSearchResultsReceiver();
+
+        mBtAdapter.startDiscovery();
     }
 
     /**
@@ -79,26 +83,21 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        mBtAdapter.startDiscovery();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
         mBtAdapter.cancelDiscovery();
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
-    }
-
-    @Override
     public void onItemSelected(int position) {
-        // TODO Connect to selected
+        BluetoothDevice device = mDevices.get(position);
+        if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
+            // TODO Start connection
+        } else {
+            // notify that pairing required
+            Toast.makeText(this, R.string.error_device_not_paired, Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
