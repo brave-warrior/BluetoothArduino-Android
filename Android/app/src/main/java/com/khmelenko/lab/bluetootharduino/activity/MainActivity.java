@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.connectivity.CommunicationThread;
 import com.khmelenko.lab.bluetootharduino.R;
 
@@ -32,8 +33,6 @@ import butterknife.OnClick;
  * @author Dmytro Khmelenko
  */
 public class MainActivity extends AppCompatActivity {
-
-    public static final String TAG = "Arduino_BT";
 
     private static final int REQUEST_ENABLE_BT = 0;
 
@@ -78,16 +77,16 @@ public class MainActivity extends AppCompatActivity {
             mBtSocket = device.createRfcommSocketToServiceRecord(CLIENT_UUID);
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d(TAG, "Socket create failed\n" + e.getMessage());
+            Log.d(BtApplication.TAG, "Socket create failed\n" + e.getMessage());
         }
 
         mBtAdapter.cancelDiscovery();
 
         // Establish the connection.  This will block until it connects.
-        Log.d(TAG, "Connecting...");
+        Log.d(BtApplication.TAG, "Connecting...");
         try {
             mBtSocket.connect();
-            Log.d(TAG, "Connected");
+            Log.d(BtApplication.TAG, "Connected");
         } catch (IOException e) {
             e.printStackTrace();
             closeConnection();
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             mBtSocket.close();
         } catch (IOException e) {
-            Log.d(TAG, "Failed to close connection\n" + e.getMessage());
+            Log.d(BtApplication.TAG, "Failed to close connection\n" + e.getMessage());
         }
     }
 
@@ -172,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
-                    Log.d(TAG, "Received message: " + readStr);
+                    Log.d(BtApplication.TAG, "Received message: " + readStr);
 
                     String responseData = activity.mStatusView.getText().toString();
                     responseData += readStr;

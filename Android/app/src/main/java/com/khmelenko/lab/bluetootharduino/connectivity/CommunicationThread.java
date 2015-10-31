@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 import android.util.Log;
 
-import com.khmelenko.lab.bluetootharduino.activity.MainActivity;
+import com.khmelenko.lab.bluetootharduino.BtApplication;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,12 +76,12 @@ public class CommunicationThread extends Thread {
      * @param message Message for sending
      */
     public void send(String message) {
-        Log.d(MainActivity.TAG, "Send message: " + message);
+        Log.d(BtApplication.TAG, "Send message: " + message);
         byte[] msgBuffer = message.getBytes();
         try {
             mOutStream.write(msgBuffer);
         } catch (IOException e) {
-            Log.d(MainActivity.TAG, "Unable to send:\n" + e.getMessage());
+            Log.d(BtApplication.TAG, "Unable to send:\n" + e.getMessage());
         }
     }
 

@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
+import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
@@ -123,7 +124,7 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.d(MainActivity.TAG, "Receiver action: " + action);
+            Log.d(BtApplication.TAG, "Receiver action: " + action);
 
             switch (action) {
                 case BluetoothAdapter.ACTION_STATE_CHANGED:
@@ -142,7 +143,7 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     mDevices.add(device);
                     mDevicesListAdapter.notifyDataSetChanged();
-                    Log.d(MainActivity.TAG, String.format("Found device: %s, %s", device.getName(), device.getAddress()));
+                    Log.d(BtApplication.TAG, String.format("Found device: %s, %s", device.getName(), device.getAddress()));
                     break;
             }
         }
