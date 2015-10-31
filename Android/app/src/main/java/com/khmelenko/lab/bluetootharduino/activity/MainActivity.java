@@ -1,4 +1,4 @@
-package com.khmelenko.lab.bluetootharduino;
+package com.khmelenko.lab.bluetootharduino.activity;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -12,6 +12,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.khmelenko.lab.bluetootharduino.connectivity.CommunicationThread;
+import com.khmelenko.lab.bluetootharduino.R;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

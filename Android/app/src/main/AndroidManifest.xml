@@ -13,7 +13,7 @@
 
         <!-- Main activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -24,7 +24,7 @@
 
         <!-- Search activity -->
         <activity
-            android:name=".SearchDevicesActivity"
+            android:name=".activity.SearchDevicesActivity"
             android:label="@string/title_activity_search_devices">
         </activity>
     </application>

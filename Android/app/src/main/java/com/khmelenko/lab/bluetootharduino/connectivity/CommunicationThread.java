@@ -1,8 +1,10 @@
-package com.khmelenko.lab.bluetootharduino;
+package com.khmelenko.lab.bluetootharduino.connectivity;
 
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 import android.util.Log;
+
+import com.khmelenko.lab.bluetootharduino.activity.MainActivity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
