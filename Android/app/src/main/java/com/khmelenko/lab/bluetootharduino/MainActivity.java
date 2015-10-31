@@ -9,15 +9,19 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
+import java.util.Set;
 import java.util.UUID;
 
 import butterknife.Bind;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
@@ -45,17 +49,20 @@ public class MainActivity extends AppCompatActivity {
     private Handler mUiHandler;
 
     private static final UUID CLIENT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static final String MAC_ADDRESS = "00:0E:EA:CF:1A:83";
+    private static final String MAC_ADDRESS = "98:D3:31:70:4D:E3";
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
         mUiHandler = new UiHandler(this);
 
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+
         checkBluetoothState();
     }
 
@@ -67,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             mBtSocket = device.createRfcommSocketToServiceRecord(CLIENT_UUID);
         } catch (IOException e) {
+            e.printStackTrace();
             Log.d(TAG, "Socket create failed\n" + e.getMessage());
         }
 
@@ -78,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
             mBtSocket.connect();
             Log.d(TAG, "Connected");
         } catch (IOException e) {
+            e.printStackTrace();
             closeConnection();
         }
 
@@ -154,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     activity.mStatusView.setText("Arduino: " + readStr);
+                    Log.d(TAG, "Received message: " + readStr);
                     break;
             }
         }

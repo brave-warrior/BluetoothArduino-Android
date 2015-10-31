@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -49,14 +50,26 @@ public class CommunicationThread extends Thread {
     @Override
     public void run() {
 
-        byte[] buffer = new byte[256];
-        int bytes;
+        //byte[] buffer = new byte[256];
+        int bytes = 0;
 
         // reading data in infinite loop
         while (true) {
             try {
-                bytes = mInStream.read(buffer);
-                mHandler.obtainMessage(RECEIVE_MESSAGE, bytes, -1, buffer).sendToTarget();
+                int nRead;
+                byte[] data = new byte[16384];
+
+
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                while ((nRead = mInStream.read(data)) != -1) {
+                    buffer.write(data, 0, nRead);
+                    nRead = mInStream.available();
+                    if(nRead <= 0) {
+                        break;
+                    }
+                }
+                // buffer.flush();
+                mHandler.obtainMessage(RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();
                 break;
@@ -70,7 +83,7 @@ public class CommunicationThread extends Thread {
      * @param message Message for sending
      */
     public void send(String message) {
-        Log.d(MainActivity.TAG, "Write message: " + message);
+        Log.d(MainActivity.TAG, "Send message: " + message);
         byte[] msgBuffer = message.getBytes();
         try {
             mOutStream.write(msgBuffer);
