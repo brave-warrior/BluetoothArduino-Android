@@ -112,6 +112,9 @@ public class MainActivity extends AppCompatActivity {
     public void handleOffBtn() {
         // TODO Use another commands
         mConnectedThread.send("0");
+
+        Intent intent = new Intent(this, SearchDevicesActivity.class);
+        startActivity(intent);
     }
 
     /**
