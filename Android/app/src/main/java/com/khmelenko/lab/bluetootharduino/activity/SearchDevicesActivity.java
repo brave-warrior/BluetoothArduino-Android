@@ -1,5 +1,6 @@
 package com.khmelenko.lab.bluetootharduino.activity;
 
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -40,6 +41,8 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
 
     @Bind(R.id.progressbarview)
     View mProgressBar;
+
+    private ProgressDialog mProgressDialog;
 
     private DevicesListAdapter mDevicesListAdapter;
     private List<BluetoothDevice> mDevices;

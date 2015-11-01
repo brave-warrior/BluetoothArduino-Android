@@ -28,6 +28,9 @@
             android:name=".activity.SearchDevicesActivity"
             android:label="@string/title_activity_search_devices">
         </activity>
+
+        <!-- Connectivity service -->
+        <service android:name=".connectivity.ConnectionService" />
     </application>
 
 </manifest>

@@ -2,7 +2,6 @@ package com.khmelenko.lab.bluetootharduino.activity;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,14 +13,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
-import com.khmelenko.lab.bluetootharduino.connectivity.CommunicationThread;
 import com.khmelenko.lab.bluetootharduino.R;
+import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
-import java.util.Set;
-import java.util.UUID;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -44,12 +40,10 @@ public class MainActivity extends AppCompatActivity {
     public TextView mStatusView;
 
     private BluetoothAdapter mBtAdapter;
-    private BluetoothSocket mBtSocket;
-    private CommunicationThread mConnectedThread;
 
+    private ConnectionService mConnectionService;
     private Handler mUiHandler;
 
-    private static final UUID CLIENT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String MAC_ADDRESS = "98:D3:31:70:4D:E3";
 
 
@@ -63,50 +57,30 @@ public class MainActivity extends AppCompatActivity {
         mUiHandler = new UiHandler(this);
 
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
-
         checkBluetoothState();
+
+        checkConnection();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    /**
+     * Checks connection with the device
+     */
+    private void checkConnection() {
+        mConnectionService = ((BtApplication) getApplication()).getConnectionService();
 
-        BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
-        try {
-            mBtSocket = device.createRfcommSocketToServiceRecord(CLIENT_UUID);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d(BtApplication.TAG, "Socket create failed\n" + e.getMessage());
+        // TODO Connect to saved device
+        if(mConnectionService != null && !mConnectionService.isConnected()) {
+            BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
+            mConnectionService.connect(device, mUiHandler);
         }
-
-        mBtAdapter.cancelDiscovery();
-
-        // Establish the connection.  This will block until it connects.
-        Log.d(BtApplication.TAG, "Connecting...");
-        try {
-            mBtSocket.connect();
-            Log.d(BtApplication.TAG, "Connected");
-        } catch (IOException e) {
-            e.printStackTrace();
-            closeConnection();
-        }
-
-        // start communication thread
-        mConnectedThread = new CommunicationThread(mBtSocket, mUiHandler);
-        mConnectedThread.start();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        closeConnection();
     }
 
     @OnClick(R.id.main_send_command_btn)
-    public void handleOnBtn() {
+    public void handleSendCommand() {
+        checkConnection();
+
         // TODO Use another commands
-        mConnectedThread.send("1");
+        mConnectionService.send("1");
     }
 
     @OnClick(R.id.main_search_btn)
@@ -121,17 +95,6 @@ public class MainActivity extends AppCompatActivity {
     private void initToolbar() {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-    }
-
-    /**
-     * Closes socket connection
-     */
-    private void closeConnection() {
-        try {
-            mBtSocket.close();
-        } catch (IOException e) {
-            Log.d(BtApplication.TAG, "Failed to close connection\n" + e.getMessage());
-        }
     }
 
     /**
@@ -163,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
             MainActivity activity = mActivity.get();
 
             switch (msg.what) {
-                case CommunicationThread.RECEIVE_MESSAGE:
+                case ConnectionService.RECEIVE_MESSAGE:
                     byte[] readBuf = (byte[]) msg.obj;
                     String readStr = new String(readBuf, 0, msg.arg1);
                     try {

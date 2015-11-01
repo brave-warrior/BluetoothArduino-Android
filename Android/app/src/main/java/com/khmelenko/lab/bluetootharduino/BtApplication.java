@@ -1,8 +1,13 @@
 package com.khmelenko.lab.bluetootharduino;
 
 import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
-import android.text.TextUtils;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+
+import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
 
 /**
  * Main application class
@@ -13,11 +18,16 @@ public class BtApplication extends Application {
 
     public static final String TAG = "Arduino_BT";
 
-    private static Context mContext;
+    private static Context sContext;
+
+    private ConnectionService mConnectionService;
 
     public void onCreate() {
         super.onCreate();
-        mContext = getApplicationContext();
+        sContext = getApplicationContext();
+
+        Intent intent = new Intent(this, ConnectionService.class);
+        bindService(intent, mServiceConnector, BIND_AUTO_CREATE);
     }
 
     /**
@@ -26,6 +36,33 @@ public class BtApplication extends Application {
      * @return Application context
      */
     public static Context getAppContext() {
-        return mContext;
+        return sContext;
     }
+
+    /**
+     * Gets connectivity service
+     *
+     * @return Connectivity service
+     */
+    public ConnectionService getConnectionService() {
+        return mConnectionService;
+    }
+
+    /**
+     * Defines callbacks for service binding, passed to bindService()
+     */
+    private ServiceConnection mServiceConnector = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            ConnectionService.ConnectionBinder binder = (ConnectionService.ConnectionBinder) service;
+            mConnectionService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            // do nothing
+        }
+    };
+
 }

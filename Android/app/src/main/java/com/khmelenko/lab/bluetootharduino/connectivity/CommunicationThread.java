@@ -17,14 +17,12 @@ import java.io.OutputStream;
  *
  * @author Dmytro Khmelenko
  */
-public class CommunicationThread extends Thread {
+class CommunicationThread extends Thread {
 
     private Handler mHandler;
 
     private final InputStream mInStream;
     private final OutputStream mOutStream;
-
-    public static final int RECEIVE_MESSAGE = 1;
 
     /**
      * Constructor
@@ -62,7 +60,7 @@ public class CommunicationThread extends Thread {
                 bytes = mInStream.read(data);
                 buffer.write(data, 0, bytes);
 
-                mHandler.obtainMessage(RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
+                mHandler.obtainMessage(ConnectionService.RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();
                 break;
