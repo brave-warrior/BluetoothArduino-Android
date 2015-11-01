@@ -4,6 +4,7 @@ import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -58,26 +59,7 @@ public final class ConnectionService extends Service {
         // disconnect previous connection
         disconnect();
 
-        try {
-            mBtSocket = device.createRfcommSocketToServiceRecord(CLIENT_UUID);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d(BtApplication.TAG, "Socket create failed\n" + e.getMessage());
-        }
-
-        // Establish the connection.  This will block until it connects.
-        Log.d(BtApplication.TAG, "Connecting...");
-        try {
-            mBtSocket.connect();
-            Log.d(BtApplication.TAG, "Connected");
-        } catch (IOException e) {
-            e.printStackTrace();
-            closeConnection();
-        }
-
-        // start communication thread
-        mConnectedThread = new CommunicationThread(mBtSocket, handler);
-        mConnectedThread.start();
+        new ConnectTask(device, handler).execute();
     }
 
     /**
@@ -123,6 +105,56 @@ public final class ConnectionService extends Service {
             mBtSocket.close();
         } catch (IOException e) {
             Log.d(BtApplication.TAG, "Failed to close connection\n" + e.getMessage());
+        }
+    }
+
+    /**
+     * Task for execution connection
+     */
+    private class ConnectTask extends AsyncTask<Void, Void, Void> {
+
+        private final BluetoothDevice mDevice;
+        private final Handler mHandler;
+
+        ConnectTask(BluetoothDevice device, Handler handler) {
+            mDevice = device;
+            mHandler = handler;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            doConnect();
+
+            // start communication thread
+            mConnectedThread = new CommunicationThread(mBtSocket, mHandler);
+            mConnectedThread.start();
+
+            return null;
+        }
+
+        private void doConnect() {
+            try {
+                mBtSocket = mDevice.createRfcommSocketToServiceRecord(CLIENT_UUID);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d(BtApplication.TAG, "Socket create failed\n" + e.getMessage());
+            }
+
+            // Establish the connection.  This will block until it connects.
+            Log.d(BtApplication.TAG, "Connecting...");
+            try {
+                mBtSocket.connect();
+                Log.d(BtApplication.TAG, "Connected");
+            } catch (IOException e) {
+                e.printStackTrace();
+                closeConnection();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            // TODO Post event to Handler that connected
         }
     }
 }
