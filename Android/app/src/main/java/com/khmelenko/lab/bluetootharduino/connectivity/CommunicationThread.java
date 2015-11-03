@@ -17,9 +17,9 @@ import java.io.OutputStream;
  *
  * @author Dmytro Khmelenko
  */
-class CommunicationThread extends Thread {
+final class CommunicationThread extends Thread {
 
-    private Handler mHandler;
+    private final Handler mHandler;
 
     private final InputStream mInStream;
     private final OutputStream mOutStream;
@@ -60,9 +60,15 @@ class CommunicationThread extends Thread {
                 bytes = mInStream.read(data);
                 buffer.write(data, 0, bytes);
 
-                mHandler.obtainMessage(ConnectionService.RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
+                if(mHandler != null) {
+                    mHandler.obtainMessage(ConnectionService.RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
+                break;
+            }
+
+            if(isInterrupted()) {
                 break;
             }
         }

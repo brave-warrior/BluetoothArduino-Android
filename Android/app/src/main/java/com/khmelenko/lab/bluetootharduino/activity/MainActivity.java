@@ -11,10 +11,12 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
+import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -28,7 +30,7 @@ import butterknife.OnClick;
  *
  * @author Dmytro Khmelenko
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnConnectionListener {
 
     private static final int REQUEST_ENABLE_BT = 0;
 
@@ -69,9 +71,13 @@ public class MainActivity extends AppCompatActivity {
         mConnectionService = ((BtApplication) getApplication()).getConnectionService();
 
         // TODO Connect to saved device
-        if(mConnectionService != null && !mConnectionService.isConnected()) {
-            BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
-            mConnectionService.connect(device, mUiHandler);
+        if(mConnectionService != null) {
+            if(!mConnectionService.isConnected()) {
+                BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
+                mConnectionService.connect(device, mUiHandler, this);
+            } else {
+                mConnectionService.setReceiver(mUiHandler);
+            }
         }
     }
 
@@ -108,6 +114,16 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
         }
+    }
+
+    @Override
+    public void onConnected(BluetoothDevice device) {
+        // TODO Enable UI controls for communication
+    }
+
+    @Override
+    public void onFailed() {
+        Toast.makeText(this, R.string.error_unable_to_connect, Toast.LENGTH_LONG).show();
     }
 
     /**

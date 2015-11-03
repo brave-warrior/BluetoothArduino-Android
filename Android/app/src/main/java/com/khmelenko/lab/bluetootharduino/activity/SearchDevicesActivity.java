@@ -21,7 +21,8 @@ import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
-import com.khmelenko.lab.bluetootharduino.model.Device;
+import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
+import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ import butterknife.ButterKnife;
  *
  * @author Dmytro Khmelenko
  */
-public class SearchDevicesActivity extends AppCompatActivity implements OnListItemListener {
+public class SearchDevicesActivity extends AppCompatActivity implements OnListItemListener, OnConnectionListener {
 
     @Bind(R.id.search_devices_recycler_view)
     RecyclerView mDevicesRecyclerView;
@@ -95,8 +96,10 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
     @Override
     public void onItemSelected(int position) {
         BluetoothDevice device = mDevices.get(position);
-        if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
-            // TODO Start connection
+        if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+            mProgressDialog = ProgressDialog.show(this, "", getString(R.string.message_connecting));
+            ConnectionService connectionService = ((BtApplication) getApplication()).getConnectionService();
+            connectionService.connect(device, this);
         } else {
             // notify that pairing required
             Toast.makeText(this, R.string.error_device_not_paired, Toast.LENGTH_LONG).show();
@@ -151,4 +154,16 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
         }
     };
 
+    @Override
+    public void onConnected(BluetoothDevice device) {
+        // TODO Save connected device
+        mProgressDialog.dismiss();
+        finish();
+    }
+
+    @Override
+    public void onFailed() {
+        mProgressDialog.dismiss();
+        Toast.makeText(this, R.string.error_unable_to_connect, Toast.LENGTH_LONG).show();
+    }
 }

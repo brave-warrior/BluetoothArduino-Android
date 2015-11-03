@@ -51,15 +51,35 @@ public final class ConnectionService extends Service {
     /**
      * Establishes connection with the device
      *
-     * @param device  Device for connection
-     * @param handler Handler
+     * @param device   Device for connection
+     * @param handler  Handler for processing responses
+     * @param listener Connection listener
      */
-    public void connect(BluetoothDevice device, Handler handler) {
+    public void connect(BluetoothDevice device, Handler handler, OnConnectionListener listener) {
 
         // disconnect previous connection
         disconnect();
+        new ConnectTask(device, handler, listener).execute();
+    }
 
-        new ConnectTask(device, handler).execute();
+    /**
+     * Establishes connection with the device
+     *
+     * @param device   Device for connection
+     * @param listener Connection listener
+     */
+    public void connect(BluetoothDevice device, OnConnectionListener listener) {
+        connect(device, null, listener);
+    }
+
+    /**
+     * Sets a receiver for messages
+     *
+     * @param handler Handler for processing messages
+     */
+    public void setReceiver(Handler handler) {
+        stopCommunicationThread();
+        startCommunicationThread(handler);
     }
 
     /**
@@ -71,10 +91,27 @@ public final class ConnectionService extends Service {
             mBtSocket = null;
         }
 
+        stopCommunicationThread();
+    }
+
+    /**
+     * Stops communication thread
+     */
+    private void stopCommunicationThread() {
         if (mConnectedThread != null) {
             mConnectedThread.interrupt();
             mConnectedThread = null;
         }
+    }
+
+    /**
+     * Starts communication thread
+     *
+     * @param handler Handler for receiving messages
+     */
+    private void startCommunicationThread(Handler handler) {
+        mConnectedThread = new CommunicationThread(mBtSocket, handler);
+        mConnectedThread.start();
     }
 
     /**
@@ -115,10 +152,12 @@ public final class ConnectionService extends Service {
 
         private final BluetoothDevice mDevice;
         private final Handler mHandler;
+        private final OnConnectionListener mListener;
 
-        ConnectTask(BluetoothDevice device, Handler handler) {
+        ConnectTask(BluetoothDevice device, Handler handler, OnConnectionListener listener) {
             mDevice = device;
             mHandler = handler;
+            mListener = listener;
         }
 
         @Override
@@ -126,9 +165,9 @@ public final class ConnectionService extends Service {
 
             doConnect();
 
-            // start communication thread
-            mConnectedThread = new CommunicationThread(mBtSocket, mHandler);
-            mConnectedThread.start();
+            if (isConnected()) {
+                startCommunicationThread(mHandler);
+            }
 
             return null;
         }
@@ -154,7 +193,13 @@ public final class ConnectionService extends Service {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            // TODO Post event to Handler that connected
+            if (mListener != null) {
+                if (isConnected()) {
+                    mListener.onConnected(mDevice);
+                } else {
+                    mListener.onFailed();
+                }
+            }
         }
     }
 }
