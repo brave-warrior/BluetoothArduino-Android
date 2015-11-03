@@ -78,8 +78,9 @@ public final class ConnectionService extends Service {
      * @param handler Handler for processing messages
      */
     public void setReceiver(Handler handler) {
-        stopCommunicationThread();
-        startCommunicationThread(handler);
+        if(mConnectedThread != null) {
+            mConnectedThread.setHandler(handler);
+        }
     }
 
     /**

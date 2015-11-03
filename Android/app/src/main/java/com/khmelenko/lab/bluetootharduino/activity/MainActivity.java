@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
 
     private ConnectionService mConnectionService;
     private Handler mUiHandler;
+    private boolean mHandshakeDone = false;
 
     private static final String MAC_ADDRESS = "98:D3:31:70:4D:E3";
 
@@ -71,12 +72,13 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
         mConnectionService = ((BtApplication) getApplication()).getConnectionService();
 
         // TODO Connect to saved device
-        if(mConnectionService != null) {
+        if(mConnectionService != null && !mHandshakeDone) {
             if(!mConnectionService.isConnected()) {
                 BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
                 mConnectionService.connect(device, mUiHandler, this);
             } else {
                 mConnectionService.setReceiver(mUiHandler);
+                mHandshakeDone = true;
             }
         }
     }
@@ -118,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
 
     @Override
     public void onConnected(BluetoothDevice device) {
+        mHandshakeDone = true;
         // TODO Enable UI controls for communication
     }
 

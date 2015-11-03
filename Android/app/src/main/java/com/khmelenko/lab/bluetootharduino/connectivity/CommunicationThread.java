@@ -19,7 +19,7 @@ import java.io.OutputStream;
  */
 final class CommunicationThread extends Thread {
 
-    private final Handler mHandler;
+    private Handler mHandler;
 
     private final InputStream mInStream;
     private final OutputStream mOutStream;
@@ -60,7 +60,9 @@ final class CommunicationThread extends Thread {
                 bytes = mInStream.read(data);
                 buffer.write(data, 0, bytes);
 
-                if(mHandler != null) {
+                Log.d(BtApplication.TAG, "New data arrived: " + buffer.toString());
+                if (mHandler != null) {
+                    Log.d(BtApplication.TAG, "Sending message to handler...");
                     mHandler.obtainMessage(ConnectionService.RECEIVE_MESSAGE, bytes, -1, buffer.toByteArray()).sendToTarget();
                 }
             } catch (IOException e) {
@@ -68,7 +70,7 @@ final class CommunicationThread extends Thread {
                 break;
             }
 
-            if(isInterrupted()) {
+            if (isInterrupted()) {
                 break;
             }
         }
@@ -89,4 +91,12 @@ final class CommunicationThread extends Thread {
         }
     }
 
+    /**
+     * Sets handler for responses
+     *
+     * @param handler Handler
+     */
+    public void setHandler(Handler handler) {
+        mHandler = handler;
+    }
 }
