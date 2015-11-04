@@ -11,6 +11,6 @@ android:
     - addon-google_apis-google-21
 
 before_install:
- - chmod +x gradlew
+ - chmod +x ./Android/gradlew
 
 script: ./Android/gradlew build assembleRelease
