@@ -1,5 +1,4 @@
 # Project description
-[![Build Status on Travis:](https://travis-ci.org/brave-warrior/BluetoothArduino-Android.svg?branch=master)](https://travis-ci.org/brave-warrior/BluetoothArduino-Android)
 
 This project demonstrates communication via Bluetooth socket between Android device and Arduino.
 It contains 2 projects:
