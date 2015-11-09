@@ -2,6 +2,7 @@
 #define RxD 2
 #define TxD 3
 
+#define Handler 13
 
 SoftwareSerial blueToothSerial(RxD,TxD);//the software serial port 
 
@@ -9,9 +10,11 @@ char recv_str[100];
 
 void setup() 
 { 
-    // user PIN 9 for AT mode
+    // use PIN 9 for AT mode
     pinMode(9, OUTPUT);
     digitalWrite(9, HIGH);
+
+    pinMode(Handler, OUTPUT);
   
     Serial.begin(9600);   //Serial port for debugging
     pinMode(RxD, INPUT);    //UART pin for Bluetooth
@@ -31,8 +34,10 @@ void loop()
         Serial.print("From BT: ");
         Serial.println((char *)recv_str);
 
-        blueToothSerial.print("Return: ");
+        blueToothSerial.print("Arduino: ");
         blueToothSerial.println((char *)recv_str);
+
+        handleCommand();
     }
 
 }
@@ -49,6 +54,20 @@ int recvMsg()
     }
 
     return i;
+}
+
+// handles the command received from BT
+void handleCommand()
+{
+    int state = digitalRead(Handler);
+    if(state == HIGH)
+    {
+        digitalWrite(Handler, LOW);
+    }
+    else
+    {
+        digitalWrite(Handler, HIGH);
+    }
 }
 
 //configure the Bluetooth through AT commands
