@@ -1,10 +1,9 @@
-package com.khmelenko.lab.bluetootharduino.connectivity;
+package com.khmelenko.lab.bluetootharduino.connectivity.reactive;
 
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -12,9 +11,16 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
+import com.khmelenko.lab.bluetootharduino.connectivity.CommunicationThread;
 
 import java.io.IOException;
 import java.util.UUID;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Service for connectivity
@@ -30,7 +36,11 @@ public final class ConnectionService extends Service {
     private final IBinder mBinder = new ConnectionBinder();
 
     private BluetoothSocket mBtSocket;
+    private BluetoothDevice mDevice;
     private CommunicationThread mConnectedThread;
+
+    // TODO Replace with Rx for communication thread
+    private Handler mHandler;
 
     /**
      * Binder for communication with the service
@@ -51,25 +61,28 @@ public final class ConnectionService extends Service {
     /**
      * Establishes connection with the device
      *
-     * @param device   Device for connection
-     * @param handler  Handler for processing responses
-     * @param listener Connection listener
+     * @param device     Device for connection
+     * @param handler    Handler for processing responses
+     * @param subscriber Connection subscriber
      */
-    public void connect(BluetoothDevice device, Handler handler, OnConnectionListener listener) {
+    public void connect(BluetoothDevice device, Handler handler, Subscriber<BluetoothDevice> subscriber) {
 
         // disconnect previous connection
         disconnect();
-        new ConnectTask(device, handler, listener).execute();
+        mDevice = device;
+        mHandler = handler;
+
+        subscribeForConnect(subscriber);
     }
 
     /**
      * Establishes connection with the device
      *
-     * @param device   Device for connection
-     * @param listener Connection listener
+     * @param device     Device for connection
+     * @param subscriber Connection subscriber
      */
-    public void connect(BluetoothDevice device, OnConnectionListener listener) {
-        connect(device, null, listener);
+    public void connect(BluetoothDevice device, Subscriber<BluetoothDevice> subscriber) {
+        connect(device, null, subscriber);
     }
 
     /**
@@ -78,7 +91,7 @@ public final class ConnectionService extends Service {
      * @param handler Handler for processing messages
      */
     public void setReceiver(Handler handler) {
-        if(mConnectedThread != null) {
+        if (mConnectedThread != null) {
             mConnectedThread.setHandler(handler);
         }
     }
@@ -146,61 +159,49 @@ public final class ConnectionService extends Service {
         }
     }
 
-    /**
-     * Task for execution connection
-     */
-    private class ConnectTask extends AsyncTask<Void, Void, Void> {
+    private Subscription subscribeForConnect(Subscriber<BluetoothDevice> subscriber) {
+        return generateObservable()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(subscriber);
+    }
 
-        private final BluetoothDevice mDevice;
-        private final Handler mHandler;
-        private final OnConnectionListener mListener;
+    private Observable<BluetoothDevice> generateObservable() {
+        return Observable.create(new Observable.OnSubscribe<android.bluetooth.BluetoothDevice>() {
+            @Override
+            public void call(Subscriber<? super android.bluetooth.BluetoothDevice> subscriber) {
 
-        ConnectTask(BluetoothDevice device, Handler handler, OnConnectionListener listener) {
-            mDevice = device;
-            mHandler = handler;
-            mListener = listener;
-        }
+                // Start connection
+                doConnect();
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-
-            doConnect();
-
-            if (isConnected()) {
-                startCommunicationThread(mHandler);
-            }
-
-            return null;
-        }
-
-        private void doConnect() {
-            try {
-                mBtSocket = mDevice.createRfcommSocketToServiceRecord(CLIENT_UUID);
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.d(BtApplication.TAG, "Socket create failed\n" + e.getMessage());
-            }
-
-            // Establish the connection.  This will block until it connects.
-            Log.d(BtApplication.TAG, "Connecting...");
-            try {
-                mBtSocket.connect();
-                Log.d(BtApplication.TAG, "Connected");
-            } catch (IOException e) {
-                e.printStackTrace();
-                closeConnection();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            if (mListener != null) {
                 if (isConnected()) {
-                    mListener.onConnected(mDevice);
+                    startCommunicationThread(mHandler);
+                    subscriber.onNext(mDevice);
+                    subscriber.onCompleted();
                 } else {
-                    mListener.onFailed();
+                    // TODO subscriber.onError();
                 }
             }
+        });
+    }
+
+    private void doConnect() {
+        try {
+            mBtSocket = mDevice.createRfcommSocketToServiceRecord(CLIENT_UUID);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d(BtApplication.TAG, "Socket create failed\n" + e.getMessage());
+        }
+
+        // Establish the connection.  This will block until it connects.
+        Log.d(BtApplication.TAG, "Connecting...");
+        try {
+            mBtSocket.connect();
+            Log.d(BtApplication.TAG, "Connected");
+        } catch (IOException e) {
+            e.printStackTrace();
+            closeConnection();
         }
     }
+
 }

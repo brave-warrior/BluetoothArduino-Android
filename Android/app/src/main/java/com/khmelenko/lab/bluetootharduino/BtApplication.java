@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
-import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
+import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
 
 /**
  * Main application class

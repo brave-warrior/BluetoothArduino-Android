@@ -21,7 +21,7 @@ import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
-import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
+import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
 import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
 
 import java.util.ArrayList;
@@ -29,6 +29,7 @@ import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import rx.Subscriber;
 
 /**
  * Activity for searching bluetooth devices
@@ -99,7 +100,7 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
         if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
             mProgressDialog = ProgressDialog.show(this, "", getString(R.string.message_connecting));
             ConnectionService connectionService = ((BtApplication) getApplication()).getConnectionService();
-            connectionService.connect(device, this);
+            connectionService.connect(device, prepareConnectionSubscriber());
         } else {
             // notify that pairing required
             Toast.makeText(this, R.string.error_device_not_paired, Toast.LENGTH_LONG).show();
@@ -165,5 +166,33 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
     public void onFailed() {
         mProgressDialog.dismiss();
         Toast.makeText(this, R.string.error_unable_to_connect, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * Prepares subscriber for handling connection
+     *
+     * @return Connection subscriber
+     */
+    private Subscriber<BluetoothDevice> prepareConnectionSubscriber() {
+        Subscriber<BluetoothDevice> subscriber = new Subscriber<BluetoothDevice>() {
+            @Override
+            public void onCompleted() {
+                mProgressDialog.dismiss();
+                finish();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mProgressDialog.dismiss();
+                Toast.makeText(SearchDevicesActivity.this, R.string.error_unable_to_connect, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onNext(BluetoothDevice device) {
+                Log.d(BtApplication.TAG, "Connection Subscriber: " + device.getName());
+                // TODO Save connected device
+            }
+        };
+        return subscriber;
     }
 }

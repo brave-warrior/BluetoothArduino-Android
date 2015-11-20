@@ -30,7 +30,9 @@
         </activity>
 
         <!-- Connectivity service -->
-        <service android:name=".connectivity.ConnectionService" />
+        <service android:name=".connectivity.async.ConnectionService" />
+        <!-- Connectivity service -->
+        <service android:name=".connectivity.reactive.ConnectionService" />
     </application>
 
 </manifest>

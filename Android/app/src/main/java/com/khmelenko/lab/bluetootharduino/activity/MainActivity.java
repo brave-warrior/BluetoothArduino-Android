@@ -15,8 +15,8 @@ import android.widget.Toast;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
-import com.khmelenko.lab.bluetootharduino.connectivity.ConnectionService;
 import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
+import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -24,6 +24,7 @@ import java.lang.ref.WeakReference;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.Subscriber;
 
 /**
  * Main application activity
@@ -72,10 +73,10 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
         mConnectionService = ((BtApplication) getApplication()).getConnectionService();
 
         // TODO Connect to saved device
-        if(mConnectionService != null && !mHandshakeDone) {
-            if(!mConnectionService.isConnected()) {
+        if (mConnectionService != null && !mHandshakeDone) {
+            if (!mConnectionService.isConnected()) {
                 BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
-                mConnectionService.connect(device, mUiHandler, this);
+                mConnectionService.connect(device, mUiHandler, prepareConnectionSubscriber());
             } else {
                 mConnectionService.setReceiver(mUiHandler);
                 mHandshakeDone = true;
@@ -103,6 +104,32 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
     private void initToolbar() {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+    }
+
+    /**
+     * Prepares subscriber for handling connection
+     *
+     * @return Connection subscriber
+     */
+    private Subscriber<BluetoothDevice> prepareConnectionSubscriber() {
+        Subscriber<BluetoothDevice> subscriber = new Subscriber<BluetoothDevice>() {
+            @Override
+            public void onCompleted() {
+                mHandshakeDone = true;
+                // TODO Enable UI controls for communication
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(BluetoothDevice device) {
+                Log.d(BtApplication.TAG, "Connection Subscriber: " + device.getName());
+            }
+        };
+        return subscriber;
     }
 
     /**

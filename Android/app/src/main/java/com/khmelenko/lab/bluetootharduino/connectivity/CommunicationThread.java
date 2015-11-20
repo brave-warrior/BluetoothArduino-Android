@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
+import com.khmelenko.lab.bluetootharduino.connectivity.async.ConnectionService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.io.OutputStream;
  *
  * @author Dmytro Khmelenko
  */
-final class CommunicationThread extends Thread {
+public final class CommunicationThread extends Thread {
 
     private Handler mHandler;
 
