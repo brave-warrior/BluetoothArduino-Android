@@ -22,7 +22,7 @@ import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
 import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
-import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
+import com.khmelenko.lab.bluetootharduino.connectivity.async.OnConnectionListener;
 
 import java.util.ArrayList;
 import java.util.List;

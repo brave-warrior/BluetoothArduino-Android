@@ -1,4 +1,4 @@
-package com.khmelenko.lab.bluetootharduino.connectivity;
+package com.khmelenko.lab.bluetootharduino.connectivity.async;
 
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;

@@ -11,7 +11,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
-import com.khmelenko.lab.bluetootharduino.connectivity.CommunicationThread;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -62,38 +61,15 @@ public final class ConnectionService extends Service {
      * Establishes connection with the device
      *
      * @param device     Device for connection
-     * @param handler    Handler for processing responses
      * @param subscriber Connection subscriber
      */
-    public void connect(BluetoothDevice device, Handler handler, Subscriber<BluetoothDevice> subscriber) {
+    public void connect(BluetoothDevice device, Subscriber<BluetoothDevice> subscriber) {
 
         // disconnect previous connection
         disconnect();
         mDevice = device;
-        mHandler = handler;
 
         subscribeForConnect(subscriber);
-    }
-
-    /**
-     * Establishes connection with the device
-     *
-     * @param device     Device for connection
-     * @param subscriber Connection subscriber
-     */
-    public void connect(BluetoothDevice device, Subscriber<BluetoothDevice> subscriber) {
-        connect(device, null, subscriber);
-    }
-
-    /**
-     * Sets a receiver for messages
-     *
-     * @param handler Handler for processing messages
-     */
-    public void setReceiver(Handler handler) {
-        if (mConnectedThread != null) {
-            mConnectedThread.setHandler(handler);
-        }
     }
 
     /**
@@ -113,7 +89,7 @@ public final class ConnectionService extends Service {
      */
     private void stopCommunicationThread() {
         if (mConnectedThread != null) {
-            mConnectedThread.interrupt();
+            mConnectedThread.stop();
             mConnectedThread = null;
         }
     }
@@ -121,11 +97,10 @@ public final class ConnectionService extends Service {
     /**
      * Starts communication thread
      *
-     * @param handler Handler for receiving messages
+     * @param subscriber Subscriber for receiving messages
      */
-    private void startCommunicationThread(Handler handler) {
-        mConnectedThread = new CommunicationThread(mBtSocket, handler);
-        mConnectedThread.start();
+    public void startCommunication(Subscriber<byte[]> subscriber) {
+        mConnectedThread = new CommunicationThread(mBtSocket, subscriber);
     }
 
     /**
@@ -159,6 +134,12 @@ public final class ConnectionService extends Service {
         }
     }
 
+    /**
+     * Subscribes for establishing connection
+     *
+     * @param subscriber Subscriber
+     * @return Subscription
+     */
     private Subscription subscribeForConnect(Subscriber<BluetoothDevice> subscriber) {
         return generateObservable()
                 .subscribeOn(Schedulers.newThread())
@@ -166,6 +147,11 @@ public final class ConnectionService extends Service {
                 .subscribe(subscriber);
     }
 
+    /**
+     * Generates observable for connecting
+     *
+     * @return Observable object
+     */
     private Observable<BluetoothDevice> generateObservable() {
         return Observable.create(new Observable.OnSubscribe<android.bluetooth.BluetoothDevice>() {
             @Override
@@ -175,7 +161,6 @@ public final class ConnectionService extends Service {
                 doConnect();
 
                 if (isConnected()) {
-                    startCommunicationThread(mHandler);
                     subscriber.onNext(mDevice);
                     subscriber.onCompleted();
                 } else {

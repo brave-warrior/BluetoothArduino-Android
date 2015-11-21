@@ -12,8 +12,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
-import com.khmelenko.lab.bluetootharduino.connectivity.CommunicationThread;
-import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
 
 import java.io.IOException;
 import java.util.UUID;

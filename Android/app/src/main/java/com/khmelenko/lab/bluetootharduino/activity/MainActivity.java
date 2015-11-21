@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
-import com.khmelenko.lab.bluetootharduino.connectivity.OnConnectionListener;
+import com.khmelenko.lab.bluetootharduino.connectivity.async.OnConnectionListener;
 import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
 
 import java.io.UnsupportedEncodingException;
@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
     private BluetoothAdapter mBtAdapter;
 
     private ConnectionService mConnectionService;
-    private Handler mUiHandler;
     private boolean mHandshakeDone = false;
 
     private static final String MAC_ADDRESS = "98:D3:31:70:4D:E3";
@@ -57,8 +56,6 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initToolbar();
-
-        mUiHandler = new UiHandler(this);
 
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         checkBluetoothState();
@@ -76,9 +73,9 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
         if (mConnectionService != null && !mHandshakeDone) {
             if (!mConnectionService.isConnected()) {
                 BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
-                mConnectionService.connect(device, mUiHandler, prepareConnectionSubscriber());
+                mConnectionService.connect(device, prepareConnectionSubscriber());
             } else {
-                mConnectionService.setReceiver(mUiHandler);
+                mConnectionService.startCommunication(prepareCommunicationSubscriber());
                 mHandshakeDone = true;
             }
         }
@@ -117,6 +114,8 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
             public void onCompleted() {
                 mHandshakeDone = true;
                 // TODO Enable UI controls for communication
+
+                startCommunication(prepareCommunicationSubscriber());
             }
 
             @Override
@@ -130,6 +129,50 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
             }
         };
         return subscriber;
+    }
+
+    /**
+     * Prepares subscriber for communication
+     *
+     * @return Subscriber
+     */
+    private Subscriber<byte[]> prepareCommunicationSubscriber() {
+        Subscriber<byte[]> subscriber = new Subscriber<byte[]>() {
+            @Override
+            public void onCompleted() {
+                Log.d(BtApplication.TAG, "Communication::onCompleted");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(BtApplication.TAG, "Communication::onError\n" + e.toString());
+            }
+
+            @Override
+            public void onNext(byte[] bytes) {
+                String readStr = new String(bytes, 0, bytes.length);
+                try {
+                    readStr = new String(bytes, "US-ASCII");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                Log.d(BtApplication.TAG, "Received message: " + readStr);
+
+                String responseData = mStatusView.getText().toString();
+                responseData += readStr;
+                mStatusView.setText(responseData);
+            }
+        };
+        return subscriber;
+    }
+
+    /**
+     * Starts communication flow
+     *
+     * @param subscriber Subscriber
+     */
+    private void startCommunication(Subscriber<byte[]> subscriber) {
+        mConnectionService.startCommunication(subscriber);
     }
 
     /**
