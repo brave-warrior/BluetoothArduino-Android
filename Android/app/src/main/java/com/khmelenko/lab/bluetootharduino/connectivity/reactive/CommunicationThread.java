@@ -78,17 +78,20 @@ public class CommunicationThread {
                 byte[] data = new byte[256];
                 int bytes = 0;
 
-                try {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    bytes = mInStream.read(data);
-                    buffer.write(data, 0, bytes);
+                while (true) {
+                    try {
+                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                        bytes = mInStream.read(data);
+                        buffer.write(data, 0, bytes);
 
-                    Log.d(BtApplication.TAG, "New data arrived: " + buffer.toString());
-                    subscriber.onNext(buffer.toByteArray());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // notify about error
-                    subscriber.onError(e);
+                        Log.d(BtApplication.TAG, "New data arrived: " + buffer.toString());
+                        subscriber.onNext(buffer.toByteArray());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        // notify about error
+                        subscriber.onError(e);
+                        break;
+                    }
                 }
             }
         });
