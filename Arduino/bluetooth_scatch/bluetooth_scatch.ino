@@ -34,9 +34,6 @@ void loop()
         Serial.print("From BT: ");
         Serial.println((char *)recv_str);
 
-        blueToothSerial.print("Arduino: ");
-        blueToothSerial.println((char *)recv_str);
-
         handleCommand();
     }
 
@@ -63,10 +60,12 @@ void handleCommand()
     if(state == HIGH)
     {
         digitalWrite(Handler, LOW);
+        blueToothSerial.print("Arduino: OFF\n");
     }
     else
     {
         digitalWrite(Handler, HIGH);
+        blueToothSerial.print("Arduino: ON\n");
     }
 }
 
