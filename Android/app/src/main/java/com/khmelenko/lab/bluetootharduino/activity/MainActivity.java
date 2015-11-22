@@ -93,6 +93,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mConnectionService.disconnect();
+    }
+
     /**
      * Initializes toolbar
      */
@@ -118,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(Throwable e) {
+                Log.d(BtApplication.TAG, "Connection error");
                 e.printStackTrace();
             }
 
