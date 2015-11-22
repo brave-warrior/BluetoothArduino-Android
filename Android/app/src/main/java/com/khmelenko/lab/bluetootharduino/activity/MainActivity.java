@@ -11,11 +11,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
-import com.khmelenko.lab.bluetootharduino.connectivity.async.OnConnectionListener;
 import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
 import com.khmelenko.lab.bluetootharduino.model.AppSettings;
 
@@ -32,7 +30,7 @@ import rx.Subscriber;
  *
  * @author Dmytro Khmelenko
  */
-public class MainActivity extends AppCompatActivity implements OnConnectionListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_ENABLE_BT = 0;
 
@@ -186,17 +184,6 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
         }
-    }
-
-    @Override
-    public void onConnected(BluetoothDevice device) {
-        mHandshakeDone = true;
-        // TODO Enable UI controls for communication
-    }
-
-    @Override
-    public void onFailed() {
-        Toast.makeText(this, R.string.error_unable_to_connect, Toast.LENGTH_LONG).show();
     }
 
     /**

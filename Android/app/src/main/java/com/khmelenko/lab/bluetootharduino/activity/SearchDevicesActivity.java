@@ -22,7 +22,6 @@ import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
 import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
-import com.khmelenko.lab.bluetootharduino.connectivity.async.OnConnectionListener;
 import com.khmelenko.lab.bluetootharduino.model.AppSettings;
 
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ import rx.Subscriber;
  *
  * @author Dmytro Khmelenko
  */
-public class SearchDevicesActivity extends AppCompatActivity implements OnListItemListener, OnConnectionListener {
+public class SearchDevicesActivity extends AppCompatActivity implements OnListItemListener {
 
     @Bind(R.id.search_devices_recycler_view)
     RecyclerView mDevicesRecyclerView;
@@ -155,19 +154,6 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
             }
         }
     };
-
-    @Override
-    public void onConnected(BluetoothDevice device) {
-        // TODO Save connected device
-        mProgressDialog.dismiss();
-        finish();
-    }
-
-    @Override
-    public void onFailed() {
-        mProgressDialog.dismiss();
-        Toast.makeText(this, R.string.error_unable_to_connect, Toast.LENGTH_LONG).show();
-    }
 
     /**
      * Prepares subscriber for handling connection
