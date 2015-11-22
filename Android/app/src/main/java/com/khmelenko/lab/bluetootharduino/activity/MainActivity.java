@@ -17,6 +17,7 @@ import com.khmelenko.lab.bluetootharduino.BtApplication;
 import com.khmelenko.lab.bluetootharduino.R;
 import com.khmelenko.lab.bluetootharduino.connectivity.async.OnConnectionListener;
 import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
+import com.khmelenko.lab.bluetootharduino.model.AppSettings;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -47,8 +48,6 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
     private ConnectionService mConnectionService;
     private boolean mHandshakeDone = false;
 
-    private static final String MAC_ADDRESS = "98:D3:31:70:4D:E3";
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -69,10 +68,11 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
     private void checkConnection() {
         mConnectionService = ((BtApplication) getApplication()).getConnectionService();
 
-        // TODO Connect to saved device
+        // Connect to saved device
         if (mConnectionService != null && !mHandshakeDone) {
             if (!mConnectionService.isConnected()) {
-                BluetoothDevice device = mBtAdapter.getRemoteDevice(MAC_ADDRESS);
+                String macAddress = AppSettings.getDeviceMacAddress();
+                BluetoothDevice device = mBtAdapter.getRemoteDevice(macAddress);
                 mConnectionService.connect(device, prepareConnectionSubscriber());
             } else {
                 mConnectionService.startCommunication(prepareCommunicationSubscriber());
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements OnConnectionListe
 
             @Override
             public void onError(Throwable e) {
-
+                e.printStackTrace();
             }
 
             @Override

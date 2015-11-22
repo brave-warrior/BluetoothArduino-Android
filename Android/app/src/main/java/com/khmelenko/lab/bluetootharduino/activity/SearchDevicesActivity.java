@@ -23,6 +23,7 @@ import com.khmelenko.lab.bluetootharduino.adapter.DevicesListAdapter;
 import com.khmelenko.lab.bluetootharduino.adapter.OnListItemListener;
 import com.khmelenko.lab.bluetootharduino.connectivity.reactive.ConnectionService;
 import com.khmelenko.lab.bluetootharduino.connectivity.async.OnConnectionListener;
+import com.khmelenko.lab.bluetootharduino.model.AppSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -190,7 +191,7 @@ public class SearchDevicesActivity extends AppCompatActivity implements OnListIt
             @Override
             public void onNext(BluetoothDevice device) {
                 Log.d(BtApplication.TAG, "Connection Subscriber: " + device.getName());
-                // TODO Save connected device
+                AppSettings.putDeviceMacAddress(device.getAddress());
             }
         };
         return subscriber;
