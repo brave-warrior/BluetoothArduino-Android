@@ -5,6 +5,10 @@ It contains 2 projects:
 - Android: contains gradle structured Android project
 - Arduino: contains scatch for Arduino microcontroller
 
+Required hardware:
+1. Arduino Uno. The project was not tested on another types of microcontrollers except Arduino Uno.
+2. Bluetooth module HC-05
+
 The solutions works in the following way: Android devices searches for Bluetooth devices and connects to the selected.
 Arduino microcontroller checks in loop serial port related with Bluetooth. When Android device sent something, Arduino will respond with predefined answer.
 
